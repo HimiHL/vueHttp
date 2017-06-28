@@ -1,8 +1,8 @@
-# hs3z
+# vueHttp
 
-> A Vue.js project
+> 一个用Vue做的简单请求HTTP生成API文档的工具
 
-## Build Setup
+## 安装
 
 ``` bash
 # install dependencies
@@ -11,11 +11,5 @@ npm install
 # serve with hot reload at localhost:8080
 npm run dev
 
-# build for production with minification
-npm run build
-
-# build for production and view the bundle analyzer report
-npm run build --report
 ```
-
-For detailed explanation on how things work, checkout the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
+## Bug肯定很多 慢慢修复来
