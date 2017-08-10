@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # vueHttp
 
 > 一个用Vue做的简单请求HTTP生成API文档的工具
@@ -13,3 +14,6 @@ npm run dev
 
 ```
 ## Bug肯定很多 慢慢修复来
+=======
+#vue_http
+>>>>>>> db97684c9caeed53dfa713329497a38295032294

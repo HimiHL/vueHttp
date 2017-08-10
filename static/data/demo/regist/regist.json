@@ -1,0 +1,21 @@
+{
+    "name" : "注册",
+    "uri" : "/regist",
+    "method" : "post",
+    "header" : [],
+    "contentType" : "x-www-form-urlencoded",
+    "body" : [ 
+        {
+            "key" : "phone",
+            "value" : "1300000000"
+        },
+        {
+            "key" : "password",
+            "value" : "e10adc3949ba59abbe56e057f20f883e"
+        },
+        {
+            "key" : "code",
+            "value" : ""
+        }
+    ]
+}

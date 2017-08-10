@@ -1,7 +1,26 @@
 <template>
-    <div id="index">
+    <div id="auto">
     <el-row :gutter="20">
-        <el-col :span="10">
+        <el-col :span="4">
+            <div style="padding:20px 20px;">
+                <el-select v-model="selectedMenu" placeholder="请选择" @change="buildMenu">
+                    <el-option
+                    v-for="(item, key) in menuList"
+                    :key="key"
+                    :label="item.name"
+                    :value="key">
+                    </el-option>
+                </el-select>
+            </div>
+            <div style="padding:20px 20px;">
+                <el-tree
+                    :data="menuData"
+                    accordion
+                    @node-click="handleNodeClick">
+                    </el-tree>
+            </div>
+        </el-col>
+        <el-col :span="8">
             <div style="margin-top: 15px;padding:0 20px;">
                 <el-input placeholder="网址" v-model="uri">
                     <el-select v-model="method" slot="prepend" placeholder="请选择">
@@ -64,7 +83,7 @@
                     </el-tab-pane>
                 </el-tabs>
             </div>
-            <div style="padding:10px 20px;">
+             <div style="padding:10px 20px;">
                 <el-radio-group v-model="defaultContentType">
                     <template v-for='item in form.contentType'>
                         <el-radio :label="item">{{ item }}</el-radio>
@@ -74,22 +93,19 @@
             <div style="padding:10px 20px;">
                 <el-button type="primary" @click="http">提交</el-button>
                 <el-button type="primary" @click="setMarkdown" :disabled="disabledMarkdown">生成文档</el-button>
-            </div>
+            </div> 
         </el-col>
-        <el-col :span="12">
+        <el-col :span="10">
             <div style="margin-top: 15px;padding:0 20px;">
                 <el-tabs type="border-card">
                     <el-tab-pane label="JSON">
                         <pre style="background:#f1f1f1;padding:5px 0px 5px 2em;overflow-y:auto;max-height:300px;">{{ response }}</pre>
                     </el-tab-pane>
                     <el-tab-pane label="源码">
-                        <div style="min-height:250px;overflow-y:auto;max-height:300px;">{{ response }}</div>
+                    <div style="min-height:250px;overflow-y:auto;max-height:300px;">{{ response }}</div>
                     </el-tab-pane>
                     <el-tab-pane label="页面">
                         <div v-html="response" style="min-height:250px;overflow-y:auto;max-height:300px;"></div>
-                    </el-tab-pane>
-                    <el-tab-pane label="接口JSON">
-                        <pre style="background:#f1f1f1;padding:5px 0px 5px 2em;overflow-y:auto;max-height:300px;">{{ ApiJsonText }}</pre>
                     </el-tab-pane>
                 </el-tabs>
             </div>
@@ -100,7 +116,7 @@
         <mavonEditor :value="markdownText" @change="update" />
         </el-row>
     </template>
-    <el-dialog title="选择文档模板" :visible.sync="dialogFormVisible">
+     <el-dialog title="选择文档模板" :visible.sync="dialogFormVisible">
         <div style="padding:10px 20px;">
             文档模板：
             <el-select v-model="selectTemplate" placeholder="请选择">
@@ -116,56 +132,28 @@
             <el-button @click="dialogFormVisible = false">取 消</el-button>
             <el-button type="primary" @click="formatMarkdown">确 定</el-button>
         </div>
-    </el-dialog>
+    </el-dialog> 
     </div>
 </template>
 <style>
-  .el-select .el-input {
-    width: 110px;
-  }
-  .el-row {
-    margin-bottom: 20px;
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
-  .el-col {
-    border-radius: 4px;
-  }
-  .bg-purple-dark {
-    background: #99a9bf;
-  }
-  .bg-purple {
-    background: #d3dce6;
-  }
-  .bg-purple-light {
-    background: #e5e9f2;
-  }
-  .grid-content {
-    border-radius: 4px;
-    min-height: 36px;
-  }
-  .row-bg {
-    padding: 10px 0;
-    background-color: #f9fafc;
-  }
 </style>
 <script>
 let qs = require('qs');
 import { mavonEditor } from 'mavon-editor'
 import 'mavon-editor/dist/css/index.css'
 export default {
-    name: 'index',
+    name: 'auto',
     data() {
         return {
+            menuData: [],
             method: 'get',
-            uri: 'https://www.baidu.com',
+            baseUri: '',
+            uri: '',
             response: '',
-            defaultContentType: 'x-www-form-urlencoded',
+            defaultContentType: '',
             markdownTemplate: {},
             selectTemplate: 'API.md',
             markdownText: '',
-            ApiJsonText: {},
             disabledMarkdown: true,
             showMarkdownEditor: false,
             dialogFormVisible: false,
@@ -180,6 +168,8 @@ export default {
                     'json'
                 ]
             },
+            menuList: {},
+            selectedMenu: ''
         }
     },
     computed: {
@@ -188,42 +178,95 @@ export default {
         }
     },
     mounted() {
+        this.initMenu();
     },
     methods: {
-        // 生成自动完成的接口JSON文件
-        buildApiJson() {
-            this.ApiJsonText['name'] = '';
-            this.ApiJsonText['uri'] = this.uri;
-            this.ApiJsonText['method'] = this.method;
-            this.ApiJsonText['header'] = this.form.headers;
-            this.ApiJsonText['contentType'] = this.defaultContentType;
-            this.ApiJsonText['body'] = this.form.body;
+        initMenu() {
+            let _this = this;
+            _this.$http.get('static/data/template.json').then(function(resp){
+                _this.menuList = resp.data;
+            }).catch(function(err){
+                _this.$notify({
+                    title: '读取JSON目录列表失败',
+                    message: '',
+                    type: 'warning'
+                });
+            });
         },
-        // 添加Header
+        buildMenu(key) {
+            let _this = this;
+            let item = _this.menuList[key];
+            _this.$http.get('static/data/'+item.path).then(function(resp){
+                _this.menuData = resp.data.menu;
+                _this.baseUri = resp.data.baseUri;
+            }).catch(function(err){
+                _this.$notify({
+                    title: '读取模板JSON失败',
+                    message: '',
+                    type: 'warning'
+                });
+            });
+        },
+        buildView(jsonFile) {
+            let _this = this;
+            let baseMenu = _this.menuList[_this.selectedMenu].baseMenu;
+            _this.$http.get('static/data'+baseMenu+jsonFile).then(function(resp){
+                let _resp = resp.data;
+                let replaces = _this.$store.state.replaces;
+                _this.uri = _this.baseUri+_resp.uri;
+                _this.method = _resp.method;
+                _this.defaultContentType = _resp.contentType;
+                // 遍历store里的state
+                for (let i in replaces) {
+                    if (replaces[i].type == 'body') {
+                        for (let body_i in _resp.body) {
+                            if(_resp.body[body_i].key == replaces[i].key) {
+                                _resp.body[body_i].value = replaces[i].value;
+                            }
+                        }
+                    } else {
+                        for (let header_i in _resp.headers) {
+                            if(_resp.headers[header_i].key == replaces[i].key) {
+                                _resp.headers[header_i].value = replaces[i].value;
+                            }
+                        }
+                    }
+                }
+                _this.form.headers = _resp.headers;
+                _this.form.body = _resp.body;
+            }).catch(function(err){
+                _this.$notify({
+                    title: '读取数据JSON失败',
+                    message: '',
+                    type: 'warning'
+                });
+            });
+        },
+        handleNodeClick(data) {
+            if (typeof(data.path) != 'undefined') {
+                this.buildView(data.path);
+            }
+        },
         addHeaders() {
         	this.form.headers.push({
             	key: "",
                 value: ""
             })
         },
-        // 删除Header
         deleteHeaders(item) {
             let index = this.form.headers.indexOf(item);
         	this.form.headers.splice(index, 1)
         },
-        // 添加Body
         addBody() {
         	this.form.body.push({
             	key: "",
                 value: ""
             })
         },
-        // 删除Body
         deleteBody(item) {
             let index = this.form.body.indexOf(item);
         	this.form.body.splice(index, 1)
         },
-        // 执行Http请求
         http() {
             var _this = this;
             _this.response = '正在请求中..';
@@ -236,7 +279,6 @@ export default {
                     headers: _this.buildJson(true),
                 }).then(function(resp){
                     _this.response = JSON.stringify(resp.data, null , 4);
-                    _this.buildApiJson();
                     _this.disabledMarkdown = false;
                 }).catch(function(error){
                     if (error.response) {
@@ -262,7 +304,6 @@ export default {
                     data: qs.stringify(_this.buildJson()),
                 }).then(function(resp){
                     _this.response = JSON.stringify(resp.data, null , 4);
-                    _this.buildApiJson();
                     _this.disabledMarkdown = false;
                 }).catch(function(error){
                     if (error.response) {
@@ -282,7 +323,6 @@ export default {
                 });
             }
         },
-        // 生成请求参数
         buildParams() {
             let param = '?';
             for ( let index in this.form.body ) {
@@ -290,7 +330,6 @@ export default {
             }
             return param.substring(0,param.length - 1);
         },
-        // 将请求的参数转换为JSON[Header+Body]
         buildJson(isHeader = false) {
             let _this = this;
             let json = {};
@@ -310,7 +349,6 @@ export default {
             }
             return json;
         },
-        // 读取JSON文件
         readJson() {
             let _this = this;
             _this.$http.get('static/template/template.json').then(function(resp){
@@ -323,7 +361,6 @@ export default {
                 });
             });
         },
-        // 读取MarkDown文档
         readMarkdown() {
             let _this = this;
             _this.$http.get('static/template/'+_this.selectTemplate).then(function(resp){
