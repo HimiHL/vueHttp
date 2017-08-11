@@ -419,6 +419,11 @@ export default {
                     if (keyType == 'undefined' || keyType == 'function') {
                         continue;
                     } else if (keyType == 'object') {
+                        _this.responseData.push({
+                            key: key,
+                            value: json[key],
+                            type: keyType
+                        })
                         _this.cycleReadJson(json[key]);
                     } else {
                         console.log({
