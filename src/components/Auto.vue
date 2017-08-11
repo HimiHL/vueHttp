@@ -150,6 +150,7 @@ export default {
             baseUri: '',
             uri: '',
             response: '',
+            responseData: [],
             defaultContentType: '',
             markdownTemplate: {},
             selectTemplate: 'API.md',
@@ -375,14 +376,23 @@ export default {
                     return request;
                 });
                 _this.markdownText = _this.markdownText.replace('{{$response}}', _this.response);
+                // _this.markdownText = _this.markdownText.replace('{{$result}}', function(){
+                //     let result = '';
+                //     let json = JSON.parse(_this.response);
+                //     for ( let index in json ) {
+                //         result += '|'+index+'|-|'+typeof(json[index])+'|Y|-|\n';
+                //     }
+                //     return result;
+                // });
                 _this.markdownText = _this.markdownText.replace('{{$result}}', function(){
                     let result = '';
-                    let json = JSON.parse(_this.response);
-                    for ( let index in json ) {
-                        result += '|'+index+'|-|'+typeof(json[index])+'|Y|-|\n';
+                    let json = _this.cycleReadJson(JSON.parse(_this.response));
+                    for (let index in json) {
+                        result += '|'+json[index].key+'|-|'+json[index].type+'|Y|-|\n';
                     }
                     return result;
                 });
+                
             }).catch(function(err){
 
             });
@@ -399,6 +409,32 @@ export default {
         setMarkdown() {
             this.readJson();
             this.dialogFormVisible = true;
+        },
+        cycleReadJson(json) { 
+            let _this = this;
+            let type = typeof(json);
+            if (type != 'undefined') {
+                for (let key in json) {
+                    let keyType = typeof(json[key]);
+                    if (keyType == 'undefined' || keyType == 'function') {
+                        continue;
+                    } else if (keyType == 'object') {
+                        _this.cycleReadJson(json[key]);
+                    } else {
+                        console.log({
+                            key: key,
+                            value: json[key],
+                            type: keyType
+                        });
+                        _this.responseData.push({
+                            key: key,
+                            value: json[key],
+                            type: keyType
+                        })
+                    }
+                }
+                return _this.responseData;
+            }
         }
     },
     components: {
