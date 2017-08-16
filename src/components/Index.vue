@@ -228,6 +228,7 @@ export default {
         http() {
             var _this = this;
             _this.response = '正在请求中..';
+            _this.responseData = [];
             _this.showMarkdownEditor = false;
             _this.disabledMarkdown = true;
             if ( _this.method == 'get' || _this.method == 'delete') {
