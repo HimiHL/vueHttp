@@ -1,0 +1,14 @@
+{
+    "baseUri" : "http://localhost:8080", 
+    "menu" : [
+        {
+            "label" : "注册相关",
+            "children" : [
+                {
+                    "label" : "注册用户",
+                    "path" : "/regist/regist.json"
+                }
+            ]
+        }
+    ]
+}

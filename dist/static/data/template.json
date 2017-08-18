@@ -1,0 +1,8 @@
+{
+    "demo" :
+        {
+            "baseMenu" : "/demo",
+            "name" : "DEMO",
+            "path" : "/demo/demo.json"
+        }
+}
